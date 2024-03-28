@@ -55,7 +55,7 @@ declare global {
 export default class ScomQRCode extends Module {
     private imgQRCode: Image;
     private qrcode: any;
-    private _data: IQRCode = { text: '' };
+    private _data: IQRCode = { text: '', level: 'L', size: 256 };
 
     static async create(options?: ScomQRCodeElement, parent?: Container) {
         let self = new this(parent, options);
@@ -94,16 +94,16 @@ export default class ScomQRCode extends Module {
     set qrCodeBackground(value: IQRCodeBackground) {
         this._data.qrCodeBackground = value;
         if (this.qrcode) {
-            if (value.color) this.qrcode.background = value.color;
-            if (value.alpha) this.qrcode.backgroundAlpha = value.alpha;
+            if (value.color != null) this.qrcode.background = value.color;
+            if (value.alpha != null) this.qrcode.backgroundAlpha = value.alpha;
         }
     }
 
     set qrCodeForeground(value: IQRCodeBackground) {
         this._data.qrCodeForeground = value;
         if (this.qrcode) {
-            if (value.color) this.qrcode.foreground = value.color;
-            if (value.alpha) this.qrcode.foregroundAlpha = value.alpha;
+            if (value.color != null) this.qrcode.foreground = value.color;
+            if (value.alpha != null) this.qrcode.foregroundAlpha = value.alpha;
         }
     }
 
@@ -123,20 +123,33 @@ export default class ScomQRCode extends Module {
 
     private async loadLib() {
         return new Promise((resolve, reject) => {
+            const options = {
+                background: this._data.qrCodeBackground?.color,
+                backgroundAlpha: this._data.qrCodeBackground?.alpha,
+                foreground: this._data.qrCodeForeground?.color,
+                foregroundAlpha: this._data.qrCodeForeground?.alpha,
+                level: this._data.level,
+                mime: this._data.mime,
+                size: this._data.size,
+                value: this.text
+            }
             RequireJS.require(reqs, function (QRious: any) {
-                resolve(new QRious());
+                resolve(new QRious(options));
             })
         });
     }
 
     async init() {
-        this.qrcode = await this.loadLib();
         await super.init();
-        this.text = this.getAttribute('text', true, '');
-        this.size = this.getAttribute('size', true, 256);
+        this.qrcode = await this.loadLib();
+        const text = this.getAttribute('text', true);
+        if (text) this.text = text;
+        const size = this.getAttribute('size', true);
+        if (size) this.size = size;
         const mime = this.getAttribute('mime', true);
         if (mime) this.mime = mime;
-        this.level = this.getAttribute('level', true, 'L');
+        const level = this.getAttribute('level', true);
+        if (level) this.level = level;
         const qrCodeBackground = this.getAttribute('qrCodeBackground', true);
         if (qrCodeBackground) this.qrCodeBackground = qrCodeBackground;
         const qrCodeForeground = this.getAttribute('qrCodeForeground', true);

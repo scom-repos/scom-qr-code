@@ -17,7 +17,7 @@ define("@scom/scom-qr-code", ["require", "exports", "@ijstech/components"], func
     let ScomQRCode = class ScomQRCode extends components_1.Module {
         constructor() {
             super(...arguments);
-            this._data = { text: '' };
+            this._data = { text: '', level: 'L', size: 256 };
         }
         static async create(options, parent) {
             let self = new this(parent, options);
@@ -54,18 +54,18 @@ define("@scom/scom-qr-code", ["require", "exports", "@ijstech/components"], func
         set qrCodeBackground(value) {
             this._data.qrCodeBackground = value;
             if (this.qrcode) {
-                if (value.color)
+                if (value.color != null)
                     this.qrcode.background = value.color;
-                if (value.alpha)
+                if (value.alpha != null)
                     this.qrcode.backgroundAlpha = value.alpha;
             }
         }
         set qrCodeForeground(value) {
             this._data.qrCodeForeground = value;
             if (this.qrcode) {
-                if (value.color)
+                if (value.color != null)
                     this.qrcode.foreground = value.color;
-                if (value.alpha)
+                if (value.alpha != null)
                     this.qrcode.foregroundAlpha = value.alpha;
             }
         }
@@ -83,20 +83,36 @@ define("@scom/scom-qr-code", ["require", "exports", "@ijstech/components"], func
         }
         async loadLib() {
             return new Promise((resolve, reject) => {
+                const options = {
+                    background: this._data.qrCodeBackground?.color,
+                    backgroundAlpha: this._data.qrCodeBackground?.alpha,
+                    foreground: this._data.qrCodeForeground?.color,
+                    foregroundAlpha: this._data.qrCodeForeground?.alpha,
+                    level: this._data.level,
+                    mime: this._data.mime,
+                    size: this._data.size,
+                    value: this.text
+                };
                 components_1.RequireJS.require(reqs, function (QRious) {
-                    resolve(new QRious());
+                    resolve(new QRious(options));
                 });
             });
         }
         async init() {
-            this.qrcode = await this.loadLib();
             await super.init();
-            this.text = this.getAttribute('text', true, '');
-            this.size = this.getAttribute('size', true, 256);
+            this.qrcode = await this.loadLib();
+            const text = this.getAttribute('text', true);
+            if (text)
+                this.text = text;
+            const size = this.getAttribute('size', true);
+            if (size)
+                this.size = size;
             const mime = this.getAttribute('mime', true);
             if (mime)
                 this.mime = mime;
-            this.level = this.getAttribute('level', true, 'L');
+            const level = this.getAttribute('level', true);
+            if (level)
+                this.level = level;
             const qrCodeBackground = this.getAttribute('qrCodeBackground', true);
             if (qrCodeBackground)
                 this.qrCodeBackground = qrCodeBackground;
