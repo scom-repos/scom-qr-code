@@ -18,8 +18,9 @@ declare module "@scom/scom-qr-code" {
     }
     export default class ScomQRCode extends Module {
         private pnlQRCode;
-        private qrcode;
         private _data;
+        tag: any;
+        private _theme;
         static create(options?: ScomQRCodeElement, parent?: Container): Promise<ScomQRCode>;
         get text(): string;
         set text(value: string);
@@ -28,8 +29,23 @@ declare module "@scom/scom-qr-code" {
         set qrCodeBackground(value: string);
         set qrCodeForeground(value: string);
         updateQRCode(): void;
+        getConfigurators(): {
+            name: string;
+            target: string;
+            getActions: () => any[];
+            getData: any;
+            setData: any;
+            getTag: any;
+            setTag: any;
+        }[];
         private setData;
         private getData;
+        private _getActions;
+        private getTag;
+        private setTag;
+        private updateTag;
+        private updateStyle;
+        private updateTheme;
         private createNewQRCodeInstance;
         private loadLib;
         init(): Promise<void>;

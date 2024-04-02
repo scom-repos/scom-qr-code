@@ -48,6 +48,11 @@ declare global {
 export default class ScomQRCode extends Module {
     private pnlQRCode: Panel;
     private _data: IQRCode = { text: '', level: 'L', size: 256 };
+    tag: any = {
+      light: {},
+      dark: {}
+    }
+    private _theme: string = 'light';
 
     static async create(options?: ScomQRCodeElement, parent?: Container) {
         let self = new this(parent, options);
@@ -83,6 +88,22 @@ export default class ScomQRCode extends Module {
         this.createNewQRCodeInstance();
     }
 
+    getConfigurators() {
+        return [
+            {
+                name: 'Builder Configurator',
+                target: 'Builders',
+                getActions: () => {
+                    return this._getActions();
+                },
+                getData: this.getData.bind(this),
+                setData: this.setData.bind(this),
+                getTag: this.getTag.bind(this),
+                setTag: this.setTag.bind(this)
+            }
+        ]
+    }
+
     private async setData(value: { text: string }) {
         this._data.text = value.text;
         this.updateQRCode();
@@ -92,15 +113,68 @@ export default class ScomQRCode extends Module {
         return this._data;
     }
 
+    private _getActions() {
+      const actions = []
+      return actions
+    }
+
+    private getTag() {
+        return this.tag;
+    }
+
+    private setTag(value: any) {
+        const newValue = value || {};
+        for (let prop in newValue) {
+            if (newValue.hasOwnProperty(prop)) {
+                if (prop === 'light' || prop === 'dark')
+                    this.updateTag(prop, newValue[prop]);
+                else
+                    this.tag[prop] = newValue[prop];
+            }
+        }
+        this.updateTheme();
+    }
+
+    private updateTag(type: 'light' | 'dark', value: any) {
+        this.tag[type] = this.tag[type] ?? {};
+        for (let prop in value) {
+            if (value.hasOwnProperty(prop))
+                this.tag[type][prop] = value[prop];
+        }
+    }
+
+    private updateStyle(name: string, value: any) {
+        value ?
+            this.style.setProperty(name, value) :
+            this.style.removeProperty(name);
+    }
+
+    private updateTheme() {
+        const themeVar = document.body.style.getPropertyValue('--theme') || 'light';
+        this.updateStyle('--text-primary', this.tag[themeVar]?.fontColor);
+        this.updateStyle('--text-secondary', this.tag[themeVar]?.secondaryColor);
+        this.updateStyle('--background-main', this.tag[themeVar]?.backgroundColor);
+        this.updateStyle('--colors-primary-main', this.tag[themeVar]?.primaryColor);
+        this.updateStyle('--colors-primary-light', this.tag[themeVar]?.primaryLightColor);
+        this.updateStyle('--colors-primary-dark', this.tag[themeVar]?.primaryDarkColor);
+        this.updateStyle('--colors-secondary-light', this.tag[themeVar]?.secondaryLight);
+        this.updateStyle('--colors-secondary-main', this.tag[themeVar]?.secondaryMain);
+        this.updateStyle('--divider', this.tag[themeVar]?.borderColor);
+        this.updateStyle('--action-selected', this.tag[themeVar]?.selected);
+        this.updateStyle('--action-selected_background', this.tag[themeVar]?.selectedBackground);
+        this.updateStyle('--action-hover_background', this.tag[themeVar]?.hoverBackground);
+        this.updateStyle('--action-hover', this.tag[themeVar]?.hover);
+    }
+
     private createNewQRCodeInstance() {
         if (!(window as any).QRCode) return;
         this.pnlQRCode.clearInnerHTML();
+        if (!this.text) return;
         const options: any = {
             width: this._data.size,
-            height: this._data.size
+            height: this._data.size,
+            text: this.text
         };
-        if (this.text)
-            options.text = this.text;
         if (this._data.qrCodeForeground)
             options.colorDark = this._data.qrCodeForeground;
         if (this._data.qrCodeForeground)
