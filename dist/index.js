@@ -7,11 +7,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 define("@scom/scom-qr-code", ["require", "exports", "@ijstech/components"], function (require, exports, components_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    const reqs = ['qrious'];
+    const reqs = ['qrcode'];
     components_1.RequireJS.config({
         baseUrl: `${components_1.application.currentModuleDir}/lib`,
         paths: {
-            'qrious': 'qrious.min.js'
+            'qrcode': 'qrcode.min.js'
         }
     });
     let ScomQRCode = class ScomQRCode extends components_1.Module {
@@ -29,50 +29,21 @@ define("@scom/scom-qr-code", ["require", "exports", "@ijstech/components"], func
         }
         set text(value) {
             this._data.text = value;
-            if (this.qrcode)
-                this.qrcode.value = value;
         }
         set size(value) {
             this._data.size = value;
-            if (this.qrcode)
-                this.qrcode.size = value;
-            if (this.imgQRCode) {
-                this.imgQRCode.width = value;
-                this.imgQRCode.height = value;
-            }
-        }
-        set mime(value) {
-            this._data.mime = value;
-            if (this.qrcode)
-                this.qrcode.mime = value;
         }
         set level(value) {
             this._data.level = value;
-            if (this.qrcode)
-                this.qrcode.level = value;
         }
         set qrCodeBackground(value) {
             this._data.qrCodeBackground = value;
-            if (this.qrcode) {
-                if (value.color != null)
-                    this.qrcode.background = value.color;
-                if (value.alpha != null)
-                    this.qrcode.backgroundAlpha = value.alpha;
-            }
         }
         set qrCodeForeground(value) {
             this._data.qrCodeForeground = value;
-            if (this.qrcode) {
-                if (value.color != null)
-                    this.qrcode.foreground = value.color;
-                if (value.alpha != null)
-                    this.qrcode.foregroundAlpha = value.alpha;
-            }
         }
         updateQRCode() {
-            if (!this.qrcode)
-                return;
-            this.imgQRCode.url = this.text ? this.qrcode.toDataURL() : '';
+            this.createNewQRCodeInstance();
         }
         async setData(value) {
             this._data.text = value.text;
@@ -81,35 +52,46 @@ define("@scom/scom-qr-code", ["require", "exports", "@ijstech/components"], func
         getData() {
             return this._data;
         }
+        createNewQRCodeInstance() {
+            if (!window.QRCode)
+                return;
+            this.pnlQRCode.clearInnerHTML();
+            const options = {
+                width: this._data.size,
+                height: this._data.size
+            };
+            if (this.text)
+                options.text = this.text;
+            if (this._data.qrCodeForeground)
+                options.colorDark = this._data.qrCodeForeground;
+            if (this._data.qrCodeForeground)
+                options.colorLight = this._data.qrCodeBackground;
+            if (this._data.level)
+                options.correctLevel = window.QRCode.CorrectLevel[this._data.level];
+            return new window.QRCode(this.pnlQRCode, options);
+        }
         async loadLib() {
             return new Promise((resolve, reject) => {
-                const options = {
-                    background: this._data.qrCodeBackground?.color,
-                    backgroundAlpha: this._data.qrCodeBackground?.alpha,
-                    foreground: this._data.qrCodeForeground?.color,
-                    foregroundAlpha: this._data.qrCodeForeground?.alpha,
-                    level: this._data.level,
-                    mime: this._data.mime,
-                    size: this._data.size,
-                    value: this.text
-                };
-                components_1.RequireJS.require(reqs, function (QRious) {
-                    resolve(new QRious(options));
-                });
+                try {
+                    let self = this;
+                    components_1.RequireJS.require(reqs, function (QRCode) {
+                        let qrcode = self.createNewQRCodeInstance();
+                        resolve(qrcode);
+                    });
+                }
+                catch (err) {
+                    console.log(err);
+                }
             });
         }
         async init() {
             await super.init();
-            this.qrcode = await this.loadLib();
             const text = this.getAttribute('text', true);
             if (text)
                 this.text = text;
             const size = this.getAttribute('size', true);
             if (size)
                 this.size = size;
-            const mime = this.getAttribute('mime', true);
-            if (mime)
-                this.mime = mime;
             const level = this.getAttribute('level', true);
             if (level)
                 this.level = level;
@@ -119,12 +101,11 @@ define("@scom/scom-qr-code", ["require", "exports", "@ijstech/components"], func
             const qrCodeForeground = this.getAttribute('qrCodeForeground', true);
             if (qrCodeForeground)
                 this.qrCodeForeground = qrCodeForeground;
-            if (this.text)
-                this.updateQRCode();
+            await this.loadLib();
         }
         render() {
             return (this.$render("i-panel", null,
-                this.$render("i-image", { id: "imgQRCode", width: 256, height: 256 })));
+                this.$render("i-panel", { id: "pnlQRCode" })));
         }
     };
     ScomQRCode = __decorate([

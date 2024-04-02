@@ -12,34 +12,27 @@ import {
 
 type LevelType = 'L' | 'M' | 'Q' | 'H';
 
-interface IQRCodeBackground {
-    color?: string;
-    alpha?: number;
-}
-
 interface ScomQRCodeElement extends ControlElement {
     text?: string;
     size?: number;
-    mime?: string;
     level?: LevelType;
-    qrCodeBackground?: IQRCodeBackground;
-    qrCodeForeground?: IQRCodeBackground;
+    qrCodeBackground?: string;
+    qrCodeForeground?: string;
 }
 
 interface IQRCode {
     text: string;
     size?: number;
-    mime?: string;
     level?: LevelType;
-    qrCodeBackground?: IQRCodeBackground;
-    qrCodeForeground?: IQRCodeBackground;
+    qrCodeBackground?: string;
+    qrCodeForeground?: string;
 }
 
-const reqs = ['qrious'];
+const reqs = ['qrcode'];
 RequireJS.config({
     baseUrl: `${application.currentModuleDir}/lib`,
     paths: {
-        'qrious': 'qrious.min.js'
+        'qrcode': 'qrcode.min.js'
     }
 })
 
@@ -53,8 +46,7 @@ declare global {
 
 @customElements('i-scom-qr-code')
 export default class ScomQRCode extends Module {
-    private imgQRCode: Image;
-    private qrcode: any;
+    private pnlQRCode: Panel;
     private _data: IQRCode = { text: '', level: 'L', size: 256 };
 
     static async create(options?: ScomQRCodeElement, parent?: Container) {
@@ -69,47 +61,26 @@ export default class ScomQRCode extends Module {
 
     set text(value: string) {
         this._data.text = value;
-        if (this.qrcode) this.qrcode.value = value;
     }
 
     set size(value: number) {
         this._data.size = value;
-        if (this.qrcode) this.qrcode.size = value;
-        if (this.imgQRCode) {
-            this.imgQRCode.width = value;
-            this.imgQRCode.height = value;
-        }
-    }
-
-    set mime(value: string) {
-        this._data.mime = value;
-        if (this.qrcode) this.qrcode.mime = value;
     }
 
     set level(value: LevelType) {
         this._data.level = value;
-        if (this.qrcode) this.qrcode.level = value;
     }
 
-    set qrCodeBackground(value: IQRCodeBackground) {
+    set qrCodeBackground(value: string) {
         this._data.qrCodeBackground = value;
-        if (this.qrcode) {
-            if (value.color != null) this.qrcode.background = value.color;
-            if (value.alpha != null) this.qrcode.backgroundAlpha = value.alpha;
-        }
     }
 
-    set qrCodeForeground(value: IQRCodeBackground) {
+    set qrCodeForeground(value: string) {
         this._data.qrCodeForeground = value;
-        if (this.qrcode) {
-            if (value.color != null) this.qrcode.foreground = value.color;
-            if (value.alpha != null) this.qrcode.foregroundAlpha = value.alpha;
-        }
     }
 
     updateQRCode() {
-        if (!this.qrcode) return;
-        this.imgQRCode.url = this.text ? this.qrcode.toDataURL() : '';
+        this.createNewQRCodeInstance();
     }
 
     private async setData(value: { text: string }) {
@@ -121,46 +92,57 @@ export default class ScomQRCode extends Module {
         return this._data;
     }
 
+    private createNewQRCodeInstance() {
+        if (!(window as any).QRCode) return;
+        this.pnlQRCode.clearInnerHTML();
+        const options: any = {
+            width: this._data.size,
+            height: this._data.size
+        };
+        if (this.text)
+            options.text = this.text;
+        if (this._data.qrCodeForeground)
+            options.colorDark = this._data.qrCodeForeground;
+        if (this._data.qrCodeForeground)
+            options.colorLight = this._data.qrCodeBackground;
+        if (this._data.level)
+            options.correctLevel = (window as any).QRCode.CorrectLevel[this._data.level];
+        return new (window as any).QRCode(this.pnlQRCode, options);
+    }
+
     private async loadLib() {
         return new Promise((resolve, reject) => {
-            const options = {
-                background: this._data.qrCodeBackground?.color,
-                backgroundAlpha: this._data.qrCodeBackground?.alpha,
-                foreground: this._data.qrCodeForeground?.color,
-                foregroundAlpha: this._data.qrCodeForeground?.alpha,
-                level: this._data.level,
-                mime: this._data.mime,
-                size: this._data.size,
-                value: this.text
+            try {
+                let self = this;
+                RequireJS.require(reqs, function (QRCode: any) {
+                    let qrcode = self.createNewQRCodeInstance();
+                    resolve(qrcode);
+                });
+            } catch (err) {
+                console.log(err)
             }
-            RequireJS.require(reqs, function (QRious: any) {
-                resolve(new QRious(options));
-            })
         });
     }
 
     async init() {
         await super.init();
-        this.qrcode = await this.loadLib();
         const text = this.getAttribute('text', true);
         if (text) this.text = text;
         const size = this.getAttribute('size', true);
         if (size) this.size = size;
-        const mime = this.getAttribute('mime', true);
-        if (mime) this.mime = mime;
         const level = this.getAttribute('level', true);
         if (level) this.level = level;
         const qrCodeBackground = this.getAttribute('qrCodeBackground', true);
         if (qrCodeBackground) this.qrCodeBackground = qrCodeBackground;
         const qrCodeForeground = this.getAttribute('qrCodeForeground', true);
         if (qrCodeForeground) this.qrCodeForeground = qrCodeForeground;
-        if (this.text) this.updateQRCode();
+        await this.loadLib();
     }
 
     render() {
         return (
             <i-panel>
-                <i-image id="imgQRCode" width={256} height={256}></i-image>
+                <i-panel id="pnlQRCode"></i-panel>
             </i-panel>
         )
     }

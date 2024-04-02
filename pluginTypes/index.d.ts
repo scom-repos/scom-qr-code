@@ -2,17 +2,12 @@
 declare module "@scom/scom-qr-code" {
     import { Module, Container, ControlElement } from '@ijstech/components';
     type LevelType = 'L' | 'M' | 'Q' | 'H';
-    interface IQRCodeBackground {
-        color?: string;
-        alpha?: number;
-    }
     interface ScomQRCodeElement extends ControlElement {
         text?: string;
         size?: number;
-        mime?: string;
         level?: LevelType;
-        qrCodeBackground?: IQRCodeBackground;
-        qrCodeForeground?: IQRCodeBackground;
+        qrCodeBackground?: string;
+        qrCodeForeground?: string;
     }
     global {
         namespace JSX {
@@ -22,20 +17,20 @@ declare module "@scom/scom-qr-code" {
         }
     }
     export default class ScomQRCode extends Module {
-        private imgQRCode;
+        private pnlQRCode;
         private qrcode;
         private _data;
         static create(options?: ScomQRCodeElement, parent?: Container): Promise<ScomQRCode>;
         get text(): string;
         set text(value: string);
         set size(value: number);
-        set mime(value: string);
         set level(value: LevelType);
-        set qrCodeBackground(value: IQRCodeBackground);
-        set qrCodeForeground(value: IQRCodeBackground);
+        set qrCodeBackground(value: string);
+        set qrCodeForeground(value: string);
         updateQRCode(): void;
         private setData;
         private getData;
+        private createNewQRCodeInstance;
         private loadLib;
         init(): Promise<void>;
         render(): any;

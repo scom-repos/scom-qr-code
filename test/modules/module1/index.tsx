@@ -14,8 +14,8 @@ export default class Module1 extends Module {
         this.scomQRCode.text = 'Testing';
         this.scomQRCode.size = 128;
         this.scomQRCode.level = 'M';
-        this.scomQRCode.qrCodeBackground = { color: '#fff', alpha: 0.9 };
-        this.scomQRCode.qrCodeForeground = { color: '#fe5262', alpha: 0.9 };
+        this.scomQRCode.qrCodeBackground = '#fff';
+        this.scomQRCode.qrCodeForeground = '#fe5262';
         this.scomQRCode.updateQRCode();
     }
 
@@ -28,8 +28,8 @@ export default class Module1 extends Module {
                         text="lnbc2500u1pvjluezsp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygspp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdq5xysxxatsyp3k7enxv4jsxqzpu9qrsgquk0rl77nj30yxdy8j9vdx85fkpmdla2087ne0xh8nhedh8w27kyke0lp53ut353s06fv3qfegext0eh0ymjpf39tuven09sam30g4vgpfna3rh"
                         size={256}
                         level="L"
-                        qrCodeBackground={{ color: '#007abf', alpha: 0.8 }}
-                        qrCodeForeground={{ color: '#fff' }}
+                        qrCodeBackground='#fff'
+                        qrCodeForeground='#007abf'
                     ></i-scom-qr-code>
                 </i-hstack>
             </i-hstack>
