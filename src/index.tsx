@@ -3,12 +3,11 @@ import {
     Container,
     ControlElement,
     customElements,
-    Styles,
     RequireJS,
     application,
-    Panel,
-    Image,
+    Panel
 } from '@ijstech/components';
+declare const window: any;
 
 type LevelType = 'L' | 'M' | 'Q' | 'H';
 
@@ -29,12 +28,7 @@ interface IQRCode {
 }
 
 const reqs = ['qrcode'];
-RequireJS.config({
-    baseUrl: `${application.currentModuleDir}/lib`,
-    paths: {
-        'qrcode': 'qrcode.min.js'
-    }
-})
+const baseLibUrl = `${application.currentModuleDir}/lib`;
 
 declare global {
     namespace JSX {
@@ -49,8 +43,8 @@ export default class ScomQRCode extends Module {
     private pnlQRCode: Panel;
     private _data: IQRCode = { text: '', level: 'L', size: 256 };
     tag: any = {
-      light: {},
-      dark: {}
+        light: {},
+        dark: {}
     }
     private _theme: string = 'light';
 
@@ -114,8 +108,8 @@ export default class ScomQRCode extends Module {
     }
 
     private _getActions() {
-      const actions = []
-      return actions
+        const actions = []
+        return actions
     }
 
     private getTag() {
@@ -167,7 +161,7 @@ export default class ScomQRCode extends Module {
     }
 
     private createNewQRCodeInstance() {
-        if (!(window as any).QRCode) return;
+        if (!window.QRCode) return;
         this.pnlQRCode.clearInnerHTML();
         if (!this.text) return;
         const options: any = {
@@ -180,14 +174,20 @@ export default class ScomQRCode extends Module {
         if (this._data.qrCodeForeground)
             options.colorLight = this._data.qrCodeBackground;
         if (this._data.level)
-            options.correctLevel = (window as any).QRCode.CorrectLevel[this._data.level];
-        return new (window as any).QRCode(this.pnlQRCode, options);
+            options.correctLevel = window.QRCode.CorrectLevel[this._data.level];
+        return new window.QRCode(this.pnlQRCode, options);
     }
 
     private async loadLib() {
         return new Promise((resolve, reject) => {
             try {
                 let self = this;
+                RequireJS.config({
+                    baseUrl: baseLibUrl,
+                    paths: {
+                        'qrcode': 'qrcode.min.js'
+                    }
+                });
                 RequireJS.require(reqs, function (QRCode: any) {
                     let qrcode = self.createNewQRCodeInstance();
                     resolve(qrcode);
@@ -216,7 +216,7 @@ export default class ScomQRCode extends Module {
     render() {
         return (
             <i-panel>
-                <i-panel id="pnlQRCode"></i-panel>
+                <i-stack id="pnlQRCode" justifyContent="center" />
             </i-panel>
         )
     }

@@ -8,12 +8,7 @@ define("@scom/scom-qr-code", ["require", "exports", "@ijstech/components"], func
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const reqs = ['qrcode'];
-    components_1.RequireJS.config({
-        baseUrl: `${components_1.application.currentModuleDir}/lib`,
-        paths: {
-            'qrcode': 'qrcode.min.js'
-        }
-    });
+    const baseLibUrl = `${components_1.application.currentModuleDir}/lib`;
     let ScomQRCode = class ScomQRCode extends components_1.Module {
         constructor() {
             super(...arguments);
@@ -142,6 +137,12 @@ define("@scom/scom-qr-code", ["require", "exports", "@ijstech/components"], func
             return new Promise((resolve, reject) => {
                 try {
                     let self = this;
+                    components_1.RequireJS.config({
+                        baseUrl: baseLibUrl,
+                        paths: {
+                            'qrcode': 'qrcode.min.js'
+                        }
+                    });
                     components_1.RequireJS.require(reqs, function (QRCode) {
                         let qrcode = self.createNewQRCodeInstance();
                         resolve(qrcode);
@@ -173,7 +174,7 @@ define("@scom/scom-qr-code", ["require", "exports", "@ijstech/components"], func
         }
         render() {
             return (this.$render("i-panel", null,
-                this.$render("i-panel", { id: "pnlQRCode" })));
+                this.$render("i-stack", { id: "pnlQRCode", justifyContent: "center" })));
         }
     };
     ScomQRCode = __decorate([
