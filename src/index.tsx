@@ -3,32 +3,22 @@ import {
     Container,
     ControlElement,
     customElements,
-    RequireJS,
-    application,
-    Panel
+    Panel,
+    Button
 } from '@ijstech/components';
+import { IImageOptions, IQRCode, Model } from './model';
+export { IQRCode, IImageOptions };
 declare const window: any;
-
-type LevelType = 'L' | 'M' | 'Q' | 'H';
 
 interface ScomQRCodeElement extends ControlElement {
     text?: string;
+    image?: IImageOptions;
     size?: number;
-    level?: LevelType;
     qrCodeBackground?: string;
-    qrCodeForeground?: string;
+    qrCodeColor?: string;
+    downloadName?: string;
+    isDownloadShown?: boolean;
 }
-
-interface IQRCode {
-    text: string;
-    size?: number;
-    level?: LevelType;
-    qrCodeBackground?: string;
-    qrCodeForeground?: string;
-}
-
-const reqs = ['qrcode'];
-const baseLibUrl = `${application.currentModuleDir}/lib`;
 
 declare global {
     namespace JSX {
@@ -40,13 +30,10 @@ declare global {
 
 @customElements('i-scom-qr-code')
 export default class ScomQRCode extends Module {
+    private model: Model;
     private pnlQRCode: Panel;
-    private _data: IQRCode = { text: '', level: 'L', size: 256 };
-    tag: any = {
-        light: {},
-        dark: {}
-    }
-    private _theme: string = 'light';
+    private btnDownload: Button;
+    private qrCode: any;
 
     static async create(options?: ScomQRCodeElement, parent?: Container) {
         let self = new this(parent, options);
@@ -55,169 +42,128 @@ export default class ScomQRCode extends Module {
     }
 
     get text() {
-        return this._data.text;
+        return this.model.text;
     }
 
     set text(value: string) {
-        this._data.text = value;
+        this.model.text = value;
+    }
+
+    get image() {
+        return this.model.image;
+    }
+
+    set image(value: IImageOptions) {
+        this.model.image = value;
     }
 
     set size(value: number) {
-        this._data.size = value;
-    }
-
-    set level(value: LevelType) {
-        this._data.level = value;
+        this.model.size = value;
     }
 
     set qrCodeBackground(value: string) {
-        this._data.qrCodeBackground = value;
+        this.model.qrCodeBackground = value;
     }
 
-    set qrCodeForeground(value: string) {
-        this._data.qrCodeForeground = value;
+    set qrCodeColor(value: string) {
+        this.model.qrCodeColor = value;
     }
 
-    updateQRCode() {
-        this.createNewQRCodeInstance();
+    get downloadName() {
+        return this.model.downloadName;
+    }
+
+    set downloadName(value: string) {
+        this.model.downloadName = value;
+    }
+
+    get isDownloadShown() {
+        return this.model.isDownloadShown;
+    }
+
+    set isDownloadShown(value: boolean) {
+        this.model.isDownloadShown = value;
     }
 
     getConfigurators() {
-        return [
-            {
-                name: 'Builder Configurator',
-                target: 'Builders',
-                getActions: () => {
-                    return this._getActions();
-                },
-                getData: this.getData.bind(this),
-                setData: this.setData.bind(this),
-                getTag: this.getTag.bind(this),
-                setTag: this.setTag.bind(this)
-            }
-        ]
+        this.initModel();
+        return this.model.getConfigurators();
     }
 
-    private async setData(value: { text: string }) {
-        this._data.text = value.text;
+    async setData(value: IQRCode) {
+        this.initModel();
+        await this.model.setData(value);
         this.updateQRCode();
     }
 
-    private getData() {
-        return this._data;
+    getData() {
+        return this.model.getData();
     }
 
-    private _getActions() {
-        const actions = []
-        return actions
-    }
-
-    private getTag() {
+    getTag() {
         return this.tag;
     }
 
-    private setTag(value: any) {
-        const newValue = value || {};
-        for (let prop in newValue) {
-            if (newValue.hasOwnProperty(prop)) {
-                if (prop === 'light' || prop === 'dark')
-                    this.updateTag(prop, newValue[prop]);
-                else
-                    this.tag[prop] = newValue[prop];
-            }
-        }
-        this.updateTheme();
+    setTag(value: any) {
+        this.model.setTag(value);
     }
 
-    private updateTag(type: 'light' | 'dark', value: any) {
-        this.tag[type] = this.tag[type] ?? {};
-        for (let prop in value) {
-            if (value.hasOwnProperty(prop))
-                this.tag[type][prop] = value[prop];
-        }
-    }
-
-    private updateStyle(name: string, value: any) {
-        value ?
-            this.style.setProperty(name, value) :
-            this.style.removeProperty(name);
-    }
-
-    private updateTheme() {
-        const themeVar = document.body.style.getPropertyValue('--theme') || 'light';
-        this.updateStyle('--text-primary', this.tag[themeVar]?.fontColor);
-        this.updateStyle('--text-secondary', this.tag[themeVar]?.secondaryColor);
-        this.updateStyle('--background-main', this.tag[themeVar]?.backgroundColor);
-        this.updateStyle('--colors-primary-main', this.tag[themeVar]?.primaryColor);
-        this.updateStyle('--colors-primary-light', this.tag[themeVar]?.primaryLightColor);
-        this.updateStyle('--colors-primary-dark', this.tag[themeVar]?.primaryDarkColor);
-        this.updateStyle('--colors-secondary-light', this.tag[themeVar]?.secondaryLight);
-        this.updateStyle('--colors-secondary-main', this.tag[themeVar]?.secondaryMain);
-        this.updateStyle('--divider', this.tag[themeVar]?.borderColor);
-        this.updateStyle('--action-selected', this.tag[themeVar]?.selected);
-        this.updateStyle('--action-selected_background', this.tag[themeVar]?.selectedBackground);
-        this.updateStyle('--action-hover_background', this.tag[themeVar]?.hoverBackground);
-        this.updateStyle('--action-hover', this.tag[themeVar]?.hover);
-    }
-
-    private createNewQRCodeInstance() {
-        if (!window.QRCode) return;
+    async updateQRCode() {
+        await this.model.loadLib();
+        const options = this.model.qrCodeOptions;
         this.pnlQRCode.clearInnerHTML();
-        if (!this.text) return;
-        const options: any = {
-            width: this._data.size,
-            height: this._data.size,
-            text: this.text
-        };
-        if (this._data.qrCodeForeground)
-            options.colorDark = this._data.qrCodeForeground;
-        if (this._data.qrCodeForeground)
-            options.colorLight = this._data.qrCodeBackground;
-        if (this._data.level)
-            options.correctLevel = window.QRCode.CorrectLevel[this._data.level];
-        return new window.QRCode(this.pnlQRCode, options);
+        this.qrCode = new window.QRCodeStyling({ ...options });
+        this.qrCode.append(this.pnlQRCode);
+        this.btnDownload.visible = this.isDownloadShown;
     }
 
-    private async loadLib() {
-        return new Promise((resolve, reject) => {
-            try {
-                let self = this;
-                RequireJS.config({
-                    baseUrl: baseLibUrl,
-                    paths: {
-                        'qrcode': 'qrcode.min.js'
-                    }
-                });
-                RequireJS.require(reqs, function (QRCode: any) {
-                    let qrcode = self.createNewQRCodeInstance();
-                    resolve(qrcode);
-                });
-            } catch (err) {
-                console.log(err)
-            }
-        });
+    private onDownload() {
+        if (!this.isDownloadShown || !this.qrCode) return;
+        this.qrCode.download({ name: this.downloadName || 'qr' });
+    }
+
+    private initModel() {
+        if (!this.model) {
+            this.model = new Model(this);
+        }
     }
 
     async init() {
-        await super.init();
+        this.initModel();
+        await this.model.loadLib();
+        super.init();
         const text = this.getAttribute('text', true);
         if (text) this.text = text;
+        const image = this.getAttribute('image', true);
+        if (image) this.image = image;
         const size = this.getAttribute('size', true);
         if (size) this.size = size;
-        const level = this.getAttribute('level', true);
-        if (level) this.level = level;
         const qrCodeBackground = this.getAttribute('qrCodeBackground', true);
         if (qrCodeBackground) this.qrCodeBackground = qrCodeBackground;
-        const qrCodeForeground = this.getAttribute('qrCodeForeground', true);
-        if (qrCodeForeground) this.qrCodeForeground = qrCodeForeground;
-        await this.loadLib();
+        const qrCodeColor = this.getAttribute('qrCodeColor', true);
+        if (qrCodeColor) this.qrCodeColor = qrCodeColor;
+        const downloadName = this.getAttribute('downloadName', true);
+        if (downloadName) this.downloadName = downloadName;
+        const isDownloadShown = this.getAttribute('isDownloadShown', true);
+        if (isDownloadShown) this.isDownloadShown = isDownloadShown;
+        this.updateQRCode();
     }
 
     render() {
         return (
-            <i-panel>
-                <i-stack id="pnlQRCode" justifyContent="center" />
-            </i-panel>
+            <i-stack alignItems="center" direction="vertical">
+                <i-panel id="pnlQRCode" />
+                <i-button
+                    id="btnDownload"
+                    visible={false}
+                    caption="Download"
+                    font={{ bold: true }}
+                    width={180}
+                    margin={{ top: '1rem' }}
+                    padding={{ left: '0.5rem', right: '0.5rem', top: '0.5rem', bottom: '0.5rem' }}
+                    onClick={this.onDownload.bind(this)}
+                />
+            </i-stack>
         )
     }
 }
