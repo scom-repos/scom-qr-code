@@ -10,7 +10,6 @@
     "devDependencies": {
         "@ijstech/cli": "^0.1.28",
         "@ijstech/compiler": "^0.1.22",
-        "@scom/dapp": "^0.1.11",
         "@scom/scom-qr-code": "file:./ref"
     },
     "scripts": {
