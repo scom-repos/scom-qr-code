@@ -21,6 +21,7 @@ declare module "@scom/scom-qr-code/model.ts" {
         set text(value: string);
         get image(): IImageOptions;
         set image(value: IImageOptions);
+        get size(): number;
         set size(value: number);
         set qrCodeBackground(value: string);
         set qrCodeColor(value: string);

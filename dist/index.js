@@ -10,6 +10,7 @@ define("@scom/scom-qr-code/model.ts", ["require", "exports", "@ijstech/component
     exports.Model = void 0;
     const reqs = ['qrcode'];
     const baseLibUrl = `${components_1.application.currentModuleDir}/lib`;
+    const SIZE = 256;
     class Model {
         get text() {
             return this._data.text;
@@ -22,6 +23,9 @@ define("@scom/scom-qr-code/model.ts", ["require", "exports", "@ijstech/component
         }
         set image(value) {
             this._data.image = value;
+        }
+        get size() {
+            return this._data.size || SIZE;
         }
         set size(value) {
             this._data.size = value;
@@ -47,7 +51,7 @@ define("@scom/scom-qr-code/model.ts", ["require", "exports", "@ijstech/component
         get qrCodeOptions() {
             if (!window.QRCodeStyling || !this.text)
                 return null;
-            const size = this._data.size || 256;
+            const size = this.size;
             const options = {
                 width: size,
                 height: size,
@@ -80,7 +84,7 @@ define("@scom/scom-qr-code/model.ts", ["require", "exports", "@ijstech/component
             return options;
         }
         constructor(module) {
-            this._data = { text: '', size: 256 };
+            this._data = { text: '', size: SIZE };
             this.module = module;
         }
         async loadLib() {
@@ -241,9 +245,12 @@ define("@scom/scom-qr-code", ["require", "exports", "@ijstech/components", "@sco
         async updateQRCode() {
             await this.model.loadLib();
             const options = this.model.qrCodeOptions;
+            if (!options)
+                return;
             this.pnlQRCode.clearInnerHTML();
             this.qrCode = new window.QRCodeStyling({ ...options });
             this.qrCode.append(this.pnlQRCode);
+            this.btnDownload.width = this.model.size > 180 ? this.model.size : 180;
             this.btnDownload.visible = this.isDownloadShown;
         }
         onDownload() {
@@ -286,7 +293,7 @@ define("@scom/scom-qr-code", ["require", "exports", "@ijstech/components", "@sco
         render() {
             return (this.$render("i-stack", { alignItems: "center", direction: "vertical" },
                 this.$render("i-panel", { id: "pnlQRCode" }),
-                this.$render("i-button", { id: "btnDownload", visible: false, caption: "Download", font: { bold: true }, width: 180, margin: { top: '1rem' }, padding: { left: '0.5rem', right: '0.5rem', top: '0.5rem', bottom: '0.5rem' }, onClick: this.onDownload.bind(this) })));
+                this.$render("i-button", { id: "btnDownload", visible: false, caption: "Download", font: { bold: true }, width: 180, maxWidth: "100%", margin: { top: '2rem' }, padding: { left: '0.5rem', right: '0.5rem', top: '0.5rem', bottom: '0.5rem' }, onClick: this.onDownload.bind(this) })));
         }
     };
     ScomQRCode = __decorate([

@@ -3,6 +3,7 @@ declare const window: any;
 
 const reqs = ['qrcode'];
 const baseLibUrl = `${application.currentModuleDir}/lib`;
+const SIZE = 256;
 
 export interface IImageOptions {
   url: string,
@@ -20,7 +21,7 @@ export interface IQRCode {
 }
 
 export class Model {
-  private _data: IQRCode = { text: '', size: 256 };
+  private _data: IQRCode = { text: '', size: SIZE };
   private module: Module;
 
   get text() {
@@ -37,6 +38,10 @@ export class Model {
 
   set image(value: IImageOptions) {
     this._data.image = value;
+  }
+
+  get size() {
+    return this._data.size || SIZE;
   }
 
   set size(value: number) {
@@ -69,7 +74,7 @@ export class Model {
 
   get qrCodeOptions() {
     if (!window.QRCodeStyling || !this.text) return null;
-    const size = this._data.size || 256;
+    const size = this.size;
     const options: any = {
       width: size,
       height: size,

@@ -111,9 +111,11 @@ export default class ScomQRCode extends Module {
     async updateQRCode() {
         await this.model.loadLib();
         const options = this.model.qrCodeOptions;
+        if (!options) return;
         this.pnlQRCode.clearInnerHTML();
         this.qrCode = new window.QRCodeStyling({ ...options });
         this.qrCode.append(this.pnlQRCode);
+        this.btnDownload.width = this.model.size > 180 ? this.model.size : 180;
         this.btnDownload.visible = this.isDownloadShown;
     }
 
@@ -159,7 +161,8 @@ export default class ScomQRCode extends Module {
                     caption="Download"
                     font={{ bold: true }}
                     width={180}
-                    margin={{ top: '1rem' }}
+                    maxWidth="100%"
+                    margin={{ top: '2rem' }}
                     padding={{ left: '0.5rem', right: '0.5rem', top: '0.5rem', bottom: '0.5rem' }}
                     onClick={this.onDownload.bind(this)}
                 />
